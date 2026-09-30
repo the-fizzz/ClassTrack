@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="{{ 'ja' if lang == 'ja' else 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t('sign_in') }} — ClassTrack</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="language-switcher login-language">
+        <span>🌐</span>
+        <a href="/set-language/en" class="{ 'selected' if lang == 'en' else '' }">English</a>
+        <a href="/set-language/ja" class="{ 'selected' if lang == 'ja' else '' }">日本語</a>
+      </div>
+      <div class="brand">
+        <span class="icon">🎓</span>
+        <h2>{{ t('app_name') }}</h2>
+        <p>{{ t('digital_attendance') }}</p>
+      </div>
+      <form method="POST">
+        <div class="form-group">
+          <label>{{ t('username') }}</label>
+          <input type="text" name="username" placeholder="{{ t('enter_username') }}" required autofocus>
+        </div>
+        <div class="form-group">
+          <label>{{ t('password') }}</label>
+          <input type="password" name="password" placeholder="{{ t('enter_password') }}" required>
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:8px;">{{ t('sign_in') }}</button>
+      </form>
+      <div class="login-hint">
+        {{ t('demo') }}: <strong>teacher</strong> / <strong>1234</strong>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

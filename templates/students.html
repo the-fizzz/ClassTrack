@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="{{ 'ja' if lang == 'ja' else 'en' }}">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ t('students') }} — ClassTrack</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body><div class="layout">
+<aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🎓</span>
+      <h2>{{ t('app_name') }}</h2>
+      <p>{{ t('attendance_system') }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="{{ 'active' if request.path == '/dashboard' else '' }}">
+        <span class="nav-icon">📊</span> {{ t('dashboard') }}
+      </a>
+      <a href="/students" class="{{ 'active' if request.path == '/students' else '' }}">
+        <span class="nav-icon">👥</span> {{ t('students') }}
+      </a>
+      <a href="/attendance" class="{{ 'active' if request.path == '/attendance' else '' }}">
+        <span class="nav-icon">✅</span> {{ t('take_attendance') }}
+      </a>
+      <a href="/reports" class="{{ 'active' if request.path == '/reports' else '' }}">
+        <span class="nav-icon">📋</span> {{ t('reports') }}
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="language-switcher">
+        <span>🌐 {{ t('language') }}</span>
+        <a href="/set-language/en" class="{{ 'selected' if lang == 'en' else '' }}">English</a>
+        <a href="/set-language/ja" class="{{ 'selected' if lang == 'ja' else '' }}">日本語</a>
+      </div>
+      <a href="/logout"><span class="nav-icon">🚪</span> {{ t('logout') }}</a>
+    </div>
+  </aside>
+<div class="main"><div class="topbar"><h1>{{ t('manage_students') }}</h1><span class="topbar-date" id="today-date"></span></div>
+<div class="page-content">
+<div class="card" style="margin-bottom:20px;"><div class="card-header"><h2>{{ t('add_new_student') }}</h2></div><div class="card-body">
+<form action="/add_student" method="POST"><div class="form-row"><div class="input-group" style="flex:1;"><label>{{ t('student_name') }}</label><input class="form-control" type="text" name="name" placeholder="{{ t('enter_full_name') }}" required></div><button class="btn btn-primary" type="submit">+ {{ t('add_student') }}</button></div></form>
+</div></div>
+<div class="card"><div class="card-header"><h2>{{ t('all_students') }}</h2><span style="font-size:0.82rem;color:var(--muted);">{{ students|length }} {{ t('students_enrolled') }}</span></div>
+<div class="table-wrap">{% if students %}<table><thead><tr><th>#</th><th>{{ t('student_name') }}</th><th>{{ t('student_id') }}</th><th style="text-align:center;">{{ t('action') }}</th></tr></thead><tbody>
+{% for student in students %}<tr><td><span class="student-num">{{ loop.index }}</span></td><td><strong>{{ student.name }}</strong></td><td style="color:var(--muted);font-size:0.82rem;">STU-{{ '%03d' % student.id }}</td><td style="text-align:center;">
+<a href="/delete_student/{{ student.id }}" onclick="return confirm({{ t('remove_confirm').replace('{name}', student.name)|tojson }})"><button class="btn btn-danger btn-sm">🗑 {{ t('remove') }}</button></a></td></tr>{% endfor %}
+</tbody></table>{% else %}<div class="empty-state"><span class="empty-icon">👥</span><p>{{ t('no_students_yet') }}</p></div>{% endif %}</div></div>
+</div></div></div>
+<script>document.getElementById('today-date').textContent=new Date().toLocaleDateString('{{ "ja-JP" if lang == "ja" else "en-US" }}',{weekday:'long',year:'numeric',month:'long',day:'numeric'});</script>
+</body></html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="{{ 'ja' if lang == 'ja' else 'en' }}">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ t('take_attendance') }} — ClassTrack</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body><div class="layout">
+<aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🎓</span>
+      <h2>{{ t('app_name') }}</h2>
+      <p>{{ t('attendance_system') }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="{{ 'active' if request.path == '/dashboard' else '' }}">
+        <span class="nav-icon">📊</span> {{ t('dashboard') }}
+      </a>
+      <a href="/students" class="{{ 'active' if request.path == '/students' else '' }}">
+        <span class="nav-icon">👥</span> {{ t('students') }}
+      </a>
+      <a href="/attendance" class="{{ 'active' if request.path == '/attendance' else '' }}">
+        <span class="nav-icon">✅</span> {{ t('take_attendance') }}
+      </a>
+      <a href="/reports" class="{{ 'active' if request.path == '/reports' else '' }}">
+        <span class="nav-icon">📋</span> {{ t('reports') }}
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="language-switcher">
+        <span>🌐 {{ t('language') }}</span>
+        <a href="/set-language/en" class="{{ 'selected' if lang == 'en' else '' }}">English</a>
+        <a href="/set-language/ja" class="{{ 'selected' if lang == 'ja' else '' }}">日本語</a>
+      </div>
+      <a href="/logout"><span class="nav-icon">🚪</span> {{ t('logout') }}</a>
+    </div>
+  </aside>
+<div class="main"><div class="topbar"><h1>{{ t('take_attendance') }}</h1><span class="topbar-date" id="today-date"></span></div>
+<div class="page-content"><form method="POST" action="/save_attendance">
+<div class="card" style="margin-bottom:20px;"><div class="card-header"><h2>{{ t('session_details') }}</h2></div><div class="card-body">
+<div class="form-row" style="align-items:center;flex-wrap:wrap;gap:12px;"><div class="input-group"><label>{{ t('date') }}</label><input class="form-control" type="date" name="date" value="{{ today }}" style="width:200px;"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;"><button type="button" class="btn btn-success btn-sm" onclick="markAll('Present')">✅ {{ t('all_present') }}</button><button type="button" class="btn btn-danger btn-sm" onclick="markAll('Absent')">❌ {{ t('all_absent') }}</button><button type="button" class="btn btn-secondary btn-sm" onclick="resetAll()">↺ {{ t('reset') }}</button></div></div>
+</div></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:0.8rem;"><span class="badge badge-present">✅ {{ t('present') }}</span><span class="badge badge-absent">❌ {{ t('absent') }}</span><span class="badge badge-late">⏰ {{ t('late') }}</span><span class="badge badge-excused">📝 {{ t('excused') }}</span></div>
+<div class="card"><div class="card-header"><h2>{{ t('class_list') }}</h2><span id="summary-badge" style="font-size:0.82rem;color:var(--muted);"></span></div><div class="table-wrap">
+{% if students %}<table><thead><tr><th>#</th><th>{{ t('student_name') }}</th><th>{{ t('attendance_system') }}</th></tr></thead><tbody>
+{% for student in students %}<tr><td><span class="student-num">{{ loop.index }}</span></td><td><strong>{{ student.name }}</strong></td><td><div class="status-group" data-student="{{ student.id }}">
+<input class="status-radio" type="radio" name="student_{{ student.id }}" id="p_{{ student.id }}" value="Present" checked><label class="status-label present" for="p_{{ student.id }}">✅ {{ t('present') }}</label>
+<input class="status-radio" type="radio" name="student_{{ student.id }}" id="a_{{ student.id }}" value="Absent"><label class="status-label absent" for="a_{{ student.id }}">❌ {{ t('absent') }}</label>
+<input class="status-radio" type="radio" name="student_{{ student.id }}" id="l_{{ student.id }}" value="Late"><label class="status-label late" for="l_{{ student.id }}">⏰ {{ t('late') }}</label>
+<input class="status-radio" type="radio" name="student_{{ student.id }}" id="e_{{ student.id }}" value="Excused"><label class="status-label excused" for="e_{{ student.id }}">📝 {{ t('excused') }}</label>
+</div></td></tr>{% endfor %}</tbody></table>
+{% else %}<div class="empty-state"><span class="empty-icon">👥</span><p>{{ t('no_students_found') }} <a href="/students" style="color:var(--accent);">{{ t('add_students_first') }}</a></p></div>{% endif %}</div>
+{% if students %}<div class="card-body" style="border-top:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-wrap:wrap;"><button class="btn btn-primary" type="submit">💾 {{ t('save_attendance') }}</button><a href="/dashboard" class="btn btn-secondary">{{ t('cancel') }}</a></div>{% endif %}
+</div></form></div></div></div>
+<script>
+document.getElementById('today-date').textContent=new Date().toLocaleDateString('{{ "ja-JP" if lang == "ja" else "en-US" }}',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+function markAll(status){const prefix={Present:'p_',Absent:'a_',Late:'l_',Excused:'e_'}[status];document.querySelectorAll('.status-group').forEach(group=>{const sid=group.dataset.student;document.getElementById(prefix+sid).checked=true;});updateSummary();}
+function resetAll(){markAll('Present');}
+function updateSummary(){const counts={Present:0,Absent:0,Late:0,Excused:0};document.querySelectorAll('.status-radio:checked').forEach(r=>{if(counts[r.value]!==undefined)counts[r.value]++;});document.getElementById('summary-badge').textContent=`✅ ${counts.Present}  ❌ ${counts.Absent}  ⏰ ${counts.Late}  📝 ${counts.Excused}`;}
+document.querySelectorAll('.status-radio').forEach(r=>r.addEventListener('change',updateSummary));updateSummary();
+</script></body></html>

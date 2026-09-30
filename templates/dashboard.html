@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="{{ 'ja' if lang == 'ja' else 'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t('dashboard') }} — ClassTrack</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🎓</span>
+      <h2>{{ t('app_name') }}</h2>
+      <p>{{ t('attendance_system') }}</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="{{ 'active' if request.path == '/dashboard' else '' }}">
+        <span class="nav-icon">📊</span> {{ t('dashboard') }}
+      </a>
+      <a href="/students" class="{{ 'active' if request.path == '/students' else '' }}">
+        <span class="nav-icon">👥</span> {{ t('students') }}
+      </a>
+      <a href="/attendance" class="{{ 'active' if request.path == '/attendance' else '' }}">
+        <span class="nav-icon">✅</span> {{ t('take_attendance') }}
+      </a>
+      <a href="/reports" class="{{ 'active' if request.path == '/reports' else '' }}">
+        <span class="nav-icon">📋</span> {{ t('reports') }}
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="language-switcher">
+        <span>🌐 {{ t('language') }}</span>
+        <a href="/set-language/en" class="{{ 'selected' if lang == 'en' else '' }}">English</a>
+        <a href="/set-language/ja" class="{{ 'selected' if lang == 'ja' else '' }}">日本語</a>
+      </div>
+      <a href="/logout"><span class="nav-icon">🚪</span> {{ t('logout') }}</a>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <h1>{{ t('dashboard') }}</h1>
+      <span class="topbar-date" id="today-date"></span>
+    </div>
+    <div class="page-content">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-icon blue">👥</div><div class="stat-info"><h3>{{ t('total_students') }}</h3><div class="stat-num">{{ total }}</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><h3>{{ t('present_today') }}</h3><div class="stat-num">{{ present }}</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">❌</div><div class="stat-info"><h3>{{ t('absent_today') }}</h3><div class="stat-num">{{ absent }}</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">⏰</div><div class="stat-info"><h3>{{ t('late_today') }}</h3><div class="stat-num">{{ late }}</div></div></div>
+        <div class="stat-card"><div class="stat-icon teal">📝</div><div class="stat-info"><h3>{{ t('excused_today') }}</h3><div class="stat-num">{{ excused }}</div></div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box"><h3>{{ t('todays_breakdown') }}</h3><canvas id="donutChart" height="220"></canvas></div>
+        <div class="chart-box">
+          <h3>{{ t('attendance_rate') }}</h3>
+          {% set pct = ((present / total * 100) | round(1)) if total > 0 else 0 %}
+          <div style="margin-bottom:14px;"><div class="flex justify-between items-center mb-4" style="margin-bottom:6px;"><span style="font-size:0.85rem;color:var(--muted);">{{ t('present') }}</span><strong style="color:var(--present);">{{ pct }}%</strong></div><div class="progress-bar"><div class="progress-fill green" style="width:{{ pct }}%"></div></div></div>
+          {% set abs_pct = ((absent / total * 100) | round(1)) if total > 0 else 0 %}
+          <div style="margin-bottom:14px;"><div class="flex justify-between items-center" style="margin-bottom:6px;"><span style="font-size:0.85rem;color:var(--muted);">{{ t('absent') }}</span><strong style="color:var(--absent);">{{ abs_pct }}%</strong></div><div class="progress-bar"><div class="progress-fill red" style="width:{{ abs_pct }}%"></div></div></div>
+          {% set late_pct = ((late / total * 100) | round(1)) if total > 0 else 0 %}
+          <div style="margin-bottom:14px;"><div class="flex justify-between items-center" style="margin-bottom:6px;"><span style="font-size:0.85rem;color:var(--muted);">{{ t('late') }}</span><strong style="color:var(--late);">{{ late_pct }}%</strong></div><div class="progress-bar"><div class="progress-fill orange" style="width:{{ late_pct }}%"></div></div></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-header"><h2>{{ t('quick_actions') }}</h2></div><div class="card-body flex gap-3" style="flex-wrap:wrap;">
+        <a href="/attendance" class="btn btn-primary">✅ {{ t('take_attendance') }}</a>
+        <a href="/students" class="btn btn-secondary">👥 {{ t('manage_students') }}</a>
+        <a href="/reports" class="btn btn-secondary">📋 {{ t('view_reports') }}</a>
+      </div></div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('{{ "ja-JP" if lang == "ja" else "en-US" }}', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+const present={present}, absent={absent}, late={late}, excused={excused}, total={total};
+const unmarked=Math.max(0,total-present-absent-late-excused);
+new Chart(document.getElementById('donutChart').getContext('2d'), {
+ type:'doughnut',
+ data:{labels:['{{ t("present") }}','{{ t("absent") }}','{{ t("late") }}','{{ t("excused") }}','{{ t("not_marked") }}'],datasets:[{data:[present,absent,late,excused,unmarked],backgroundColor:['#2e7d32','#c62828','#e65100','#00695c','#bdbdbd'],borderWidth:2,borderColor:'#fff'}]},
+ options:{cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:14,font:{size:12}}}}}
+});
+</script>
+</body></html>
